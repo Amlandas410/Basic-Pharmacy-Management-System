@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pharmacy Management System</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+<div class="layout">
+    <aside class="sidebar">
+        <h1>PharmaCare</h1>
+        <p class="tagline">Management System</p>
+        <button class="nav-btn active" data-section="dashboard">Dashboard</button>
+        <button class="nav-btn" data-section="medicines">Medicines</button>
+        <button class="nav-btn" data-section="billing">Billing</button>
+        <button class="nav-btn" data-section="sales">Sales</button>
+    </aside>
+
+    <main class="main">
+        <header class="topbar">
+            <div>
+                <h2 id="page-title">Dashboard</h2>
+                <p>Manage pharmacy inventory and sales</p>
+            </div>
+            <button class="primary" onclick="openMedicineModal()">+ Add Medicine</button>
+        </header>
+
+        <section id="dashboard" class="section active">
+            <div class="cards">
+                <div class="card"><span>Total Medicines</span><strong id="medicineCount">0</strong></div>
+                <div class="card"><span>Total Stock</span><strong id="stockCount">0</strong></div>
+                <div class="card"><span>Total Sales</span><strong id="salesCount">0</strong></div>
+                <div class="card accent"><span>Revenue</span><strong id="salesTotal">₹0.00</strong></div>
+                <div class="card accent"><span>Inventory Cost</span><strong id="inventoryCost">₹0.00</strong></div>
+                <div class="card accent"><span>Inventory Value</span><strong id="inventoryValue">₹0.00</strong></div>
+                <div class="card profit"><span>Total Profit</span><strong id="profitTotal">₹0.00</strong></div>
+                <div class="card warning"><span>Low Stock</span><strong id="lowStock">0</strong></div>
+                <div class="card danger"><span>Expired</span><strong id="expired">0</strong></div>
+            </div>
+            <div class="panel">
+                <h3>Quick Actions</h3>
+                <div class="quick-actions">
+                    <button onclick="openMedicineModal()">Add Medicine</button>
+                    <button onclick="showSection('billing')">Create Bill</button>
+                    <button onclick="showSection('sales')">Record Sale</button>
+                    <button onclick="showSection('medicines')">View Inventory</button>
+                </div>
+            </div>
+        </section>
+
+        <section id="medicines" class="section">
+            <div class="panel">
+                <div class="toolbar">
+                    <input id="searchInput" placeholder="Search medicine, category or batch..." oninput="loadMedicines()">
+                    <button class="primary" onclick="openMedicineModal()">+ Add Medicine</button>
+                </div>
+                <div class="table-wrap">
+                    <table>
+                        <thead><tr><th>Name</th><th>Category</th><th>Batch</th><th>Expiry</th><th>Buy Price</th><th>Sell Price</th><th>Stock Value</th><th>Qty</th><th>Status</th><th>Action</th></tr></thead>
+                        <tbody id="medicineTable"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <section id="billing" class="section">
+            <div class="billing-layout">
+                <div class="panel billing-form-panel">
+                    <h3>Billing</h3>
+                    <label for="customerName">Customer Name</label>
+                    <input id="customerName" placeholder="Walk-in customer">
+                    <label for="billMedicine">Medicine</label>
+                    <select id="billMedicine"></select>
+                    <div class="quantity-row">
+                        <div><label for="billQuantity">Quantity</label><input id="billQuantity" type="number" min="1" value="1"></div>
+                        <div class="stock-note">Stock <strong id="billStock">0</strong></div>
+                    </div>
+                    <button class="primary wide" id="addToBill" type="button">Add to Bill</button>
+                    <p class="form-message" id="billMessage"></p>
+                </div>
+                <div class="panel bill-preview-panel">
+                    <div class="bill-heading"><h3>Bill Preview</h3><span id="billStatus">Draft</span></div>
+                    <div id="billPreview" class="bill-paper"></div>
+                    <div class="bill-actions">
+                        <button id="removeBillItem" type="button">Remove Selected</button>
+                        <button id="clearBill" type="button">Clear Bill</button>
+                        <button class="primary" id="generateBill" type="button">Generate Bill &amp; Sell</button>
+                        <button id="printBill" type="button">Print Bill</button>
+                        <button id="downloadBill" type="button">Download E-Bill</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="sales" class="section">
+            <div class="grid-2">
+                <div class="panel">
+                    <h3>Record Sale</h3>
+                    <form id="saleForm">
+                        <label>Medicine</label>
+                        <select id="saleMedicine" required></select>
+                        <label>Quantity</label>
+                        <input id="saleQuantity" type="number" min="1" required>
+                        <button class="primary" type="submit">Record Sale</button>
+                    </form>
+                </div>
+                <div class="panel">
+                    <h3>Recent Sales</h3>
+                    <div class="table-wrap">
+                        <table>
+                            <thead><tr><th>Medicine</th><th>Qty</th><th>Revenue</th><th>Profit</th><th>Date</th></tr></thead>
+                            <tbody id="salesTable"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+</div>
+
+<div id="medicineModal" class="modal">
+    <div class="modal-card">
+        <div class="modal-header"><h3 id="modalTitle">Add Medicine</h3><button onclick="closeMedicineModal()">×</button></div>
+        <form id="medicineForm">
+            <input id="medicineId" type="hidden">
+            <div class="form-grid">
+                <div><label>Medicine Name</label><input id="medicineName" required></div>
+                <div><label>Category</label><input id="category" required placeholder="Tablet / Syrup / Capsule"></div>
+                <div><label>Manufacturer</label><input id="manufacturer"></div>
+                <div><label>Batch No.</label><input id="batchNo"></div>
+                <div><label>Expiry Date</label><input id="expiryDate" type="date" required><small id="expiryHint">Must be after today</small></div>
+                <div><label>Buying Price (₹)</label><input id="purchasePrice" type="number" min="0" step="0.01" required></div>
+                <div><label>Selling Price (₹)</label><input id="sellingPrice" type="number" min="0" step="0.01" required></div>
+                <div><label>Quantity</label><input id="quantity" type="number" min="0" required></div>
+                <div><label>Reorder Level</label><input id="reorderLevel" type="number" min="0" required value="10"></div>
+            </div>
+            <button class="primary" type="submit">Save Medicine</button>
+        </form>
+    </div>
+</div>
+
+<script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>
